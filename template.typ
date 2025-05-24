@@ -120,7 +120,7 @@
   )
 }
 
-#let schedule(start_date, events, all_day_events) = {
+#let schedule(start_date, events) = {
   set par(leading: 0.20em, spacing: 0.4em)
   grid(
     // columns:
@@ -177,7 +177,7 @@
         grid(
           columns: SCHEDULE_DAYS,
           ..range(SCHEDULE_DAYS).map(i => {
-            let today_events = all_day_events.at(i, default: ())
+            let today_events = events.at(i, default: (:)).at("all_day", default: ())
             if today_events.len() > 0 {
               grid(
                 inset: 0.15em,
@@ -234,7 +234,7 @@
           columns: range(SCHEDULE_DAYS).map(_ => 1fr),
           rows: 1fr,
           ..range(SCHEDULE_DAYS).map(i => {
-            let today_events = events.at(i, default: ())
+            let today_events = events.at(i, default: (:)).at("regular", default: ())
             block(width: 100%, height: 100%, for event in today_events { event })
           })
         )
@@ -244,22 +244,14 @@
 }
 
 /// Render schedules on multiple pages, one schedule per day
-#let calendar(start_date, events, all_day_events) = {
-  /// Slice, but allow slicing past the end
-  let slice_ex(a, start, end: none) = {
-    if start >= a.len() {
-      return ()
-    }
-    return a.slice(start, end)
-  }
-
+#let calendar(start_date, events) = {
   let n_days = events.len()
 
   // generate this amount of pages
   let n_schedules = calc.max(1, 1 + n_days - SCHEDULE_DAYS)
 
   for page_idx in range(n_schedules) {
-    schedule(start_date + duration(days: 1) * page_idx, events.slice(page_idx), slice_ex(all_day_events, page_idx))
+    schedule(start_date + duration(days: 1) * page_idx, events.slice(page_idx))
     if page_idx != n_schedules - 1 {
       pagebreak()
     }
@@ -290,7 +282,6 @@
       datetime(year: 2025, month: 5, day: 22, hour: 18, minute: 0, second: 0),
       datetime(year: 2025, month: 5, day: 22, hour: 20, minute: 0, second: 0),
       [*Probability & statistics*],
-      settings: (n_overlaps: 1),
     ),
   ),
   (
@@ -341,10 +332,60 @@
   ),
 )
 
+/// Parse a date from JSON (Typst doesn't support this natively).
+#let parse_date(date) = {
+  datetime(
+    year: date.at("year"),
+    month: date.at("month"),
+    day: date.at("day"),
+  )
+}
+/// Parse a datetime from JSON.
+#let parse_datetime(date) = {
+  datetime(
+    year: date.at("year"),
+    month: date.at("month"),
+    day: date.at("day"),
+    hour: date.at("hour"),
+    minute: date.at("minute"),
+    second: date.at("second"),
+  )
+}
+
+#let data = json("data.json")
+#let start_date = parse_date(data.start_date)
+
+#let events = (
+  data
+    .events
+    .enumerate()
+    .map(elem => {
+      let (i, ev) = elem
+      let current_date = start_date + duration(days: 1) * i
+
+      (
+        regular: ev.regular.map(regular_ev => {
+          let start = parse_datetime(regular_ev.start)
+          let end = parse_datetime(regular_ev.end)
+          event_cell(
+            current_date,
+            start,
+            end,
+            [*#regular_ev.name*],
+            settings: (description: regular_ev.summary),
+          )
+        }),
+        all_day: ev.all_day.map(all_day_ev => {
+          all_day_cell(all_day_ev.name)
+        }),
+      )
+    })
+)
+
 #let bingus2 = (
   (
     all_day_cell[bingus],
     all_day_cell[dingus],
   ),
 )
-#calendar(datetime(year: 2025, month: 5, day: 23), bingus, bingus2)
+#calendar(start_date, events)
