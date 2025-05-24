@@ -33,9 +33,10 @@ class Configuration:
     end_time: time
     schedule_days: int
     max_days: int
+    screen: dict
 
 
-def get_config(location: Path | None=None) -> Configuration:
+def get_config(location: Path | None = None) -> Configuration:
     """Read and parse configuration for this script."""
 
     if location is None:
@@ -62,12 +63,20 @@ def get_config(location: Path | None=None) -> Configuration:
         raise ValueError("Missing `ics_directory` setting.")
     ics_directory = Path(ics_directory_str).expanduser()
 
+    screen = config.get(
+        "screen",
+        dict(
+            width=3.6, height=4.76666666667, font_size=6, font_family="Libertinus Serif"
+        ),
+    )
+
     return Configuration(
         ics_directory=ics_directory,
         start_time=config.get("start_time", time(8, 0, 0)),
         end_time=config.get("end_time", time(22, 0, 0)),
         schedule_days=config.get("schedule_days", 5),
         max_days=config.get("max_days", 33),
+        screen=screen,
     )
 
 
@@ -266,6 +275,7 @@ def generate_data(
         start_time=serialize_time(config.start_time),
         end_time=serialize_time(config.end_time),
         schedule_days=config.schedule_days,
+        screen=config.screen,
         events=events,
     )
 

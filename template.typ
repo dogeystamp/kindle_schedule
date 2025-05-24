@@ -308,15 +308,14 @@
   }
 }
 
-
 // kindle settings
 #set page(
-  width: 3.6in,
-  height: 4.7666667in,
-  flipped: false,
+  width: data.screen.width * 1in,
+  height: data.screen.height * 1in,
+  flipped: data.screen.flipped,
   margin: (top: 1em, bottom: 1em, left: 1.0em, right: 1.5em),
 )
-#set text(font: "Liberation Sans", size: 6pt)
+#set text(font: data.screen.font_family, size: data.screen.font_size * 1pt)
 
 #let events = (
   data

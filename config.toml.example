@@ -23,3 +23,22 @@ schedule_days = 5
 
 # Total number of days to read events from.
 max_days = 33
+
+
+
+[screen]
+# Screen dimensions in inches.
+# These default numbers are for the Kindle Paperwhite 3.
+width = 3.6
+height = 4.7666667
+
+# If true, rotate from portrait to landscape or vice-versa.
+flipped = false
+
+# Font size in pt.
+font_size = 6
+
+# Font family used by Typst.
+#
+# Liberation Sans is usally not installed but it will fall back to a default font.
+font_family = "Liberation Sans"
