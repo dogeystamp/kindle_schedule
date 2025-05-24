@@ -1,0 +1,341 @@
+// number of days per schedule
+#let SCHEDULE_DAYS = 5
+
+// global start time (e.g. morning)
+#let START_TIME = datetime(hour: 8, minute: 0, second: 0)
+// global end time (e.g. evening)
+#let END_TIME = datetime(hour: 22, minute: 0, second: 0)
+
+#let schedule_length = (END_TIME - START_TIME).hours()
+#let hour_height = (1 / schedule_length) * 100%
+
+#let datetime_to_date(dt) = {
+  return datetime(year: dt.year(), month: dt.month(), day: dt.day())
+}
+
+#let all_day_cell(
+  summary,
+) = {
+  rect(
+    width: 100%,
+    fill: luma(90%),
+    inset: 0.5em,
+    align(
+      horizon + center,
+      [
+        #set text(size: 0.9em)
+        #summary
+      ],
+    ),
+  )
+}
+
+/// Compute the positioning and scaling of the cell for a single event.
+#let event_cell(
+  // the date the cell is on
+  current_date,
+  start_time,
+  end_time,
+  // Event's content.
+  description,
+  // Optional settings.
+  settings: (:),
+) = {
+  let n_overlaps = settings.at("n_overlaps", default: 0)
+
+  let cell_fill = if n_overlaps > 0 {
+    luma(90%)
+  } else {
+    luma(100%)
+  }
+
+  let today_start = datetime(
+    year: current_date.year(),
+    month: current_date.month(),
+    day: current_date.day(),
+    hour: START_TIME.hour(),
+    minute: START_TIME.minute(),
+    second: START_TIME.second(),
+  )
+
+  let today_end = datetime(
+    year: current_date.year(),
+    month: current_date.month(),
+    day: current_date.day(),
+    hour: END_TIME.hour(),
+    minute: END_TIME.minute(),
+    second: END_TIME.second(),
+  )
+
+  let effective_start = calc.max(start_time, today_start)
+  let effective_end = calc.min(end_time, today_end)
+
+  let time_msg = (start, end, today_date) => {
+    let start_label = if datetime_to_date(start) == today_date {
+      [#start.display("[hour]:[minute]")]
+    } else {
+      []
+    }
+
+    let end_label = if datetime_to_date(end) == today_date {
+      [#end.display("[hour]:[minute]")]
+    } else {
+      []
+    }
+
+    set text(size: 0.8em)
+    parbreak()
+    [#start_label -- #end_label]
+  }
+
+  let others_msg = count => {
+    if count > 0 {
+      parbreak()
+      set text(size: 0.8em)
+      if count > 1 [
+        _(#count other events)_
+      ] else [
+        _(#count other event)_
+      ]
+    }
+  }
+
+  place(
+    top + left,
+    dx: 0%,
+    dy: (effective_start - today_start).hours() * hour_height,
+    rect(
+      height: calc.max(0, (effective_end - effective_start).hours()) * hour_height,
+      fill: cell_fill,
+      stroke: 1pt + black,
+      inset: 0.5em,
+      width: 100%,
+    )[
+      #description
+      #time_msg(start_time, end_time, current_date)
+      #others_msg(n_overlaps)
+    ],
+  )
+}
+
+#let schedule(start_date, events, all_day_events) = {
+  set par(leading: 0.20em, spacing: 0.4em)
+  grid(
+    // columns:
+    // - hour indicators
+    // - timetable
+    columns: (3em, auto),
+    // rows:
+    // - days of the week
+    // - all day events
+    // - timetable
+    rows: (2.5em, auto, 1fr),
+
+    // corner area (idk what to put here)
+    block(),
+
+    // day of the week indicators
+    block(
+      height: 100%,
+      width: 100%,
+      grid(
+        columns: SCHEDULE_DAYS,
+        ..range(SCHEDULE_DAYS).map(i => {
+          let current_date = start_date + duration(days: i)
+          rect(
+            width: 100%,
+            height: 100%,
+            stroke: none,
+            inset: 0em,
+            align(
+              center + top,
+              [
+                #set par(leading: 0.4em)
+                #current_date.display("[weekday]")
+                \
+                #set text(size: 1.4em)
+                *#current_date.display("[day]")*
+              ],
+            ),
+          )
+        })
+      ),
+    ),
+
+    // dummy (corner)
+    block(),
+
+    // all day event blocks
+    block(
+      height: auto,
+      width: 100%,
+      {
+        grid(
+          columns: SCHEDULE_DAYS,
+          ..range(SCHEDULE_DAYS).map(i => {
+            let today_events = all_day_events.at(i, default: ())
+            if today_events.len() > 0 {
+              grid(
+                inset: 0.15em,
+                ..today_events
+              )
+            } else {
+              block(width: 100%)
+            }
+          })
+        )
+        v(0.4em)
+      },
+    ),
+
+    // hour indicators
+    block(height: 100%, width: 100%, inset: (right: 0.5em))[
+      #let current_time = START_TIME
+      #while current_time < END_TIME {
+        let time_label = text(current_time.display("[hour]:[minute]"))
+
+        place(
+          right,
+          dx: -0.15em,
+          dy: (current_time - START_TIME).hours() * hour_height - 0.375em,
+          time_label,
+        )
+        current_time += duration(hours: 1)
+      }
+    ],
+
+    // main calendar element
+    block(
+      height: 100%,
+      width: 100%,
+      {
+        // hour line markers
+        let current_time = START_TIME
+        while current_time < END_TIME {
+          let time_label = text(current_time.display("[hour]:[minute]"))
+
+          place(
+            dx: -1%,
+            dy: (current_time - START_TIME).hours() * hour_height,
+            line(length: 102%, stroke: 0.5pt + gray),
+          )
+          current_time += duration(hours: 1)
+        }
+
+
+        // events
+        grid(
+          columns: range(SCHEDULE_DAYS).map(_ => 1fr),
+          rows: 1fr,
+          ..range(SCHEDULE_DAYS).map(i => {
+            let today_events = events.at(i, default: ())
+            block(width: 100%, height: 100%, for event in today_events { event })
+          })
+        )
+      },
+    ),
+  )
+}
+
+/// Render schedules on multiple pages, one schedule per day
+#let calendar(start_date, events, all_day_events) = {
+  /// Slice, but allow slicing past the end
+  let slice_ex(a, start, end: none) = {
+    if start >= a.len() {
+      return ()
+    }
+    return a.slice(start, end)
+  }
+
+  let n_days = events.len()
+
+  // generate this amount of pages
+  let n_schedules = calc.max(1, 1 + n_days - SCHEDULE_DAYS)
+
+  for page_idx in range(n_schedules) {
+    schedule(start_date + duration(days: 1) * page_idx, events.slice(page_idx), slice_ex(all_day_events, page_idx))
+    if page_idx != n_schedules - 1 {
+      pagebreak()
+    }
+  }
+}
+
+// kindle settings
+#set page(
+  width: 3.6in,
+  height: 4.7666667in,
+  flipped: false,
+  margin: (top: 1em, bottom: 1em, left: 1.0em, right: 1.5em),
+)
+#set text(font: "Liberation Sans", size: 6pt)
+
+#let bingus = (
+  (
+    event_cell(
+      datetime(year: 2025, month: 5, day: 22),
+      datetime(year: 2025, month: 5, day: 22, hour: 9, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 22, hour: 10, minute: 0, second: 0),
+      [*Probability & statistics*],
+    ),
+    event_cell(
+      datetime(year: 2025, month: 5, day: 22),
+      datetime(year: 2025, month: 5, day: 22, hour: 18, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 22, hour: 20, minute: 0, second: 0),
+      [*Probability & statistics*],
+    ),
+  ),
+  (
+    event_cell(
+      datetime(year: 2025, month: 5, day: 23),
+      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
+      [*Badingus*],
+    ),
+    event_cell(
+      datetime(year: 2025, month: 5, day: 23),
+      datetime(year: 2025, month: 5, day: 23, hour: 17, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 23, hour: 19, minute: 0, second: 0),
+      [*Probability & statistics*],
+    ),
+  ),
+  (
+    event_cell(
+      datetime(year: 2025, month: 5, day: 23),
+      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
+      [*Badingus*],
+    ),
+  ),
+  (
+    event_cell(
+      datetime(year: 2025, month: 5, day: 23),
+      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
+      [*Badingus*],
+    ),
+  ),
+  (
+    event_cell(
+      datetime(year: 2025, month: 5, day: 23),
+      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
+      [*Badingus*],
+    ),
+  ),
+  (
+    event_cell(
+      datetime(year: 2025, month: 5, day: 23),
+      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
+      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
+      [*54krjlk*],
+    ),
+  ),
+)
+
+#let bingus2 = (
+  (
+  all_day_cell[bingus],
+  all_day_cell[dingus],
+),
+)
+#calendar(datetime(year: 2025, month: 5, day: 23), bingus, bingus2)
