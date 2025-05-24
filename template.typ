@@ -1,12 +1,45 @@
+/// Parse a time from JSON (Typst doesn't support this natively).
+#let parse_time(date) = {
+  datetime(
+    hour: date.at("hour"),
+    minute: date.at("minute"),
+    second: date.at("second"),
+  )
+}
+/// Parse a date from JSON (Typst doesn't support this natively).
+#let parse_date(date) = {
+  datetime(
+    year: date.at("year"),
+    month: date.at("month"),
+    day: date.at("day"),
+  )
+}
+/// Parse a datetime from JSON.
+#let parse_datetime(date) = {
+  datetime(
+    year: date.at("year"),
+    month: date.at("month"),
+    day: date.at("day"),
+    hour: date.at("hour"),
+    minute: date.at("minute"),
+    second: date.at("second"),
+  )
+}
+
+
+// parse data from JSON
+#let data = json("data.json")
+#let start_date = parse_date(data.start_date)
+
 // number of days per schedule
-#let SCHEDULE_DAYS = 5
+#let schedule_days = data.schedule_days
 
 // global start time (e.g. morning)
-#let START_TIME = datetime(hour: 8, minute: 0, second: 0)
+#let start_time = parse_time(data.start_time)
 // global end time (e.g. evening)
-#let END_TIME = datetime(hour: 22, minute: 0, second: 0)
+#let end_time = parse_time(data.end_time)
 
-#let schedule_length = (END_TIME - START_TIME).hours()
+#let schedule_length = (end_time - start_time).hours()
 #let hour_height = (1 / schedule_length) * 100%
 
 #let datetime_to_date(dt) = {
@@ -54,18 +87,18 @@
     year: current_date.year(),
     month: current_date.month(),
     day: current_date.day(),
-    hour: START_TIME.hour(),
-    minute: START_TIME.minute(),
-    second: START_TIME.second(),
+    hour: start_time.hour(),
+    minute: start_time.minute(),
+    second: start_time.second(),
   )
 
   let today_end = datetime(
     year: current_date.year(),
     month: current_date.month(),
     day: current_date.day(),
-    hour: END_TIME.hour(),
-    minute: END_TIME.minute(),
-    second: END_TIME.second(),
+    hour: end_time.hour(),
+    minute: end_time.minute(),
+    second: end_time.second(),
   )
 
   let effective_start = calc.max(start_time, today_start)
@@ -144,8 +177,8 @@
       height: auto,
       width: 100%,
       grid(
-        columns: SCHEDULE_DAYS,
-        ..range(SCHEDULE_DAYS).map(i => {
+        columns: schedule_days,
+        ..range(schedule_days).map(i => {
           let current_date = start_date + duration(days: i)
           rect(
             width: 100%,
@@ -175,8 +208,8 @@
       width: 100%,
       {
         grid(
-          columns: SCHEDULE_DAYS,
-          ..range(SCHEDULE_DAYS).map(i => {
+          columns: schedule_days,
+          ..range(schedule_days).map(i => {
             let today_events = events.at(i, default: (:)).at("all_day", default: ())
             if today_events.len() > 0 {
               grid(
@@ -194,8 +227,8 @@
 
     // hour indicators
     block(height: 100%, width: auto, inset: (right: 1em))[
-      #let current_time = START_TIME
-      #while current_time < END_TIME {
+      #let current_time = start_time
+      #while current_time < end_time {
         // zero height to avoid displacing the other labels
         let time_label = box(height: 0em, text(current_time.display("[hour]")))
 
@@ -203,7 +236,7 @@
           top,
           float: true,
           clearance: 0em,
-          dy: (current_time - START_TIME).hours() * hour_height - 0.375em,
+          dy: (current_time - start_time).hours() * hour_height - 0.375em,
           time_label,
         )
         current_time += duration(hours: 1)
@@ -216,13 +249,13 @@
       width: 100%,
       {
         // hour line markers
-        let current_time = START_TIME
-        while current_time < END_TIME {
+        let current_time = start_time
+        while current_time < end_time {
           let time_label = text(current_time.display("[hour]:[minute]"))
 
           place(
             dx: -1%,
-            dy: (current_time - START_TIME).hours() * hour_height,
+            dy: (current_time - start_time).hours() * hour_height,
             line(length: 102%, stroke: 0.5pt + gray),
           )
           current_time += duration(hours: 1)
@@ -231,9 +264,9 @@
 
         // events
         grid(
-          columns: range(SCHEDULE_DAYS).map(_ => 1fr),
+          columns: range(schedule_days).map(_ => 1fr),
           rows: 1fr,
-          ..range(SCHEDULE_DAYS).map(i => {
+          ..range(schedule_days).map(i => {
             let today_events = events.at(i, default: (:)).at("regular", default: ())
             block(width: 100%, height: 100%, for event in today_events { event })
           })
@@ -248,7 +281,7 @@
   let n_days = events.len()
 
   // generate this amount of pages
-  let n_schedules = calc.max(1, 1 + n_days - SCHEDULE_DAYS)
+  let n_schedules = calc.max(1, 1 + n_days - schedule_days)
 
   for page_idx in range(n_schedules) {
     schedule(start_date + duration(days: 1) * page_idx, events.slice(page_idx))
@@ -268,31 +301,6 @@
 )
 #set text(font: "Liberation Sans", size: 6pt)
 
-
-/// Parse a date from JSON (Typst doesn't support this natively).
-#let parse_date(date) = {
-  datetime(
-    year: date.at("year"),
-    month: date.at("month"),
-    day: date.at("day"),
-  )
-}
-/// Parse a datetime from JSON.
-#let parse_datetime(date) = {
-  datetime(
-    year: date.at("year"),
-    month: date.at("month"),
-    day: date.at("day"),
-    hour: date.at("hour"),
-    minute: date.at("minute"),
-    second: date.at("second"),
-  )
-}
-
-
-// parse events from JSON
-#let data = json("data.json")
-#let start_date = parse_date(data.start_date)
 #let events = (
   data
     .events
@@ -319,4 +327,5 @@
       )
     })
 )
+
 #calendar(start_date, events)
