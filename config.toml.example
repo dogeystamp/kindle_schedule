@@ -1,0 +1,14 @@
+# vim: set filetype=toml:
+
+# kindle_schedule example configuration.
+#
+# Copy this to `~/.config/kindle_schedule/config.toml`, or set the
+# configuration directory through the `KINDLE_SCHEDULE_DIR` environment
+# variable.
+
+
+# This directory contains a bunch of .ics files. kindle_schedule will search it
+# recursively (**/*.ics) and merge all the files to generate the schedule.
+#
+# You can use vdirsyncer(1) to sync this directory to a central server like xandikos(8) or radicale.
+ics_directory = "~/.local/share/vdirsyncer/cal/"
