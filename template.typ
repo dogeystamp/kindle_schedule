@@ -36,12 +36,13 @@
   current_date,
   start_time,
   end_time,
-  // Event's content.
-  description,
+  // Event's title.
+  event_name,
   // Optional settings.
   settings: (:),
 ) = {
   let n_overlaps = settings.at("n_overlaps", default: 0)
+  let description = settings.at("description", default: [])
 
   let cell_fill = if n_overlaps > 0 {
     luma(90%)
@@ -83,7 +84,6 @@
       []
     }
 
-    set text(size: 0.8em)
     parbreak()
     [#start_label -- #end_label]
   }
@@ -91,7 +91,6 @@
   let others_msg = count => {
     if count > 0 {
       parbreak()
-      set text(size: 0.8em)
       if count > 1 [
         _(#count other events)_
       ] else [
@@ -111,8 +110,11 @@
       inset: 0.5em,
       width: 100%,
     )[
-      #description
+      #event_name
+      #set text(size: 0.8em)
       #time_msg(start_time, end_time, current_date)
+
+      #emph(description)
       #others_msg(n_overlaps)
     ],
   )
@@ -202,7 +204,7 @@
           float: true,
           clearance: 0em,
           dy: (current_time - START_TIME).hours() * hour_height - 0.375em,
-          time_label
+          time_label,
         )
         current_time += duration(hours: 1)
       }
@@ -264,6 +266,7 @@
   }
 }
 
+
 // kindle settings
 #set page(
   width: 3.6in,
@@ -272,6 +275,7 @@
   margin: (top: 1em, bottom: 1em, left: 1.0em, right: 1.5em),
 )
 #set text(font: "Liberation Sans", size: 6pt)
+
 
 #let bingus = (
   (
@@ -286,6 +290,7 @@
       datetime(year: 2025, month: 5, day: 22, hour: 18, minute: 0, second: 0),
       datetime(year: 2025, month: 5, day: 22, hour: 20, minute: 0, second: 0),
       [*Probability & statistics*],
+      settings: (n_overlaps: 1),
     ),
   ),
   (
@@ -338,8 +343,8 @@
 
 #let bingus2 = (
   (
-  all_day_cell[bingus],
-  all_day_cell[dingus],
-),
+    all_day_cell[bingus],
+    all_day_cell[dingus],
+  ),
 )
 #calendar(datetime(year: 2025, month: 5, day: 23), bingus, bingus2)
