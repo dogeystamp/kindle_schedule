@@ -94,3 +94,23 @@ MacOS. This script itself should work on Windows, but `vdirsyncer` doesn't.
 
 - You can now go back to `schedule.pdf`, and press the power button. KOReader will put the device in deep sleep,
     but your schedule will stay on screen. This saves an immense amount of battery.
+
+## development
+
+This project is built using [uv](https://docs.astral.sh/uv/).
+The Python files list their own dependencies ([PEP-0723](https://peps.python.org/pep-0723/)),
+so you can install the dependencies and run the scripts with a single command:
+
+```
+uv run kindle_schedule.py
+```
+
+To get a virtual environment for your IDE / LSP to work with, you can do the following:
+
+```
+uv venv
+source .venv/bin/activate
+uv sync --active --script kindle_schedule.py
+```
+
+This will create a virtual environment with all of the script's dependencies.
