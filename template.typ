@@ -105,6 +105,19 @@
   let effective_start = calc.max(ev_start_time, today_start)
   let effective_end = calc.min(ev_end_time, today_end)
 
+  let effective_duration = effective_end - effective_start
+
+  let ev_format = if effective_duration.hours() <= 0.5 {
+    "x-small"
+  } else if effective_duration.hours() <= 1.0 {
+    "small"
+  } else {
+    "normal"
+  }
+
+  let text_size = ("x-small": 0.7em, "small": 0.825em, "normal": 1em)
+  set text(size: text_size.at(ev_format))
+
   let time_msg = (start, end, today_date) => {
     let start_label = if datetime_to_date(start) == today_date {
       [#start.display("[hour]:[minute]")]
@@ -148,14 +161,17 @@
       #set text(size: 0.8em)
       #time_msg(ev_start_time, ev_end_time, current_date)
 
-      #emph(description)
-      #others_msg(n_overlaps)
+      #if ev_format != "x-small" {
+        emph(description)
+        others_msg(n_overlaps)
+      }
     ],
   )
 }
 
 #let schedule(start_date, events) = {
-  set par(leading: 0.20em, spacing: 0.4em)
+  set par(leading: 0.20em, spacing: 0.4em, linebreaks: "optimized")
+  set text(hyphenate: true)
   grid(
     // columns:
     // - hour indicators
