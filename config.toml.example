@@ -12,3 +12,13 @@
 #
 # You can use vdirsyncer(1) to sync this directory to a central server like xandikos(8) or radicale.
 ics_directory = "~/.local/share/vdirsyncer/cal/"
+
+# Start and end range displayed for a day in the schedule.
+start_time = 08:00:00
+end_time =   22:00:00
+
+# The number of days per page displayed on the schedule.
+schedule_days = 5
+
+# Total number of days to read events from.
+max_days = 33

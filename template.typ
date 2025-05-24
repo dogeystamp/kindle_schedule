@@ -28,7 +28,8 @@
 
 
 // parse data from JSON
-#let data = json("data.json")
+#let json_data = sys.inputs.at("schedule", default: none)
+#let data = if json_data != none { json(bytes(json_data)) } else { json("test.json") }
 #let start_date = parse_date(data.start_date)
 
 // number of days per schedule
@@ -67,8 +68,8 @@
 #let event_cell(
   // the date the cell is on
   current_date,
-  start_time,
-  end_time,
+  ev_start_time,
+  ev_end_time,
   // Event's title.
   event_name,
   // Optional settings.
@@ -101,8 +102,8 @@
     second: end_time.second(),
   )
 
-  let effective_start = calc.max(start_time, today_start)
-  let effective_end = calc.min(end_time, today_end)
+  let effective_start = calc.max(ev_start_time, today_start)
+  let effective_end = calc.min(ev_end_time, today_end)
 
   let time_msg = (start, end, today_date) => {
     let start_label = if datetime_to_date(start) == today_date {
@@ -145,7 +146,7 @@
     )[
       #event_name
       #set text(size: 0.8em)
-      #time_msg(start_time, end_time, current_date)
+      #time_msg(ev_start_time, ev_end_time, current_date)
 
       #emph(description)
       #others_msg(n_overlaps)
