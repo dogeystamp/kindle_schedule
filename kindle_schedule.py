@@ -15,7 +15,7 @@ import os
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
-from typing import Literal, Self, cast
+from typing import Self, cast
 
 import icalendar
 import recurring_ical_events
@@ -35,17 +35,20 @@ class Configuration:
     max_days: int
 
 
-def get_config() -> Configuration:
+def get_config(location: Path | None=None) -> Configuration:
     """Read and parse configuration for this script."""
 
-    config_dir_str = os.environ.get("KINDLE_SCHEDULE_DIR", None)
-    config_dir = (
-        Path(config_dir_str)
-        if config_dir_str
-        else Path.home() / ".config/kindle_schedule"
-    )
+    if location is None:
+        config_dir_str = os.environ.get("KINDLE_SCHEDULE_DIR", None)
+        config_dir = (
+            Path(config_dir_str)
+            if config_dir_str
+            else Path.home() / ".config/kindle_schedule"
+        )
 
-    config_file = config_dir / "config.toml"
+        config_file = config_dir / "config.toml"
+    else:
+        config_file = location
 
     try:
         config = tomllib.loads(config_file.read_text())
@@ -269,20 +272,41 @@ def generate_data(
 
 def generate_schedule(
     data: dict,
-    format: Literal["pdf"] | Literal["svg"] | Literal["png"] = "pdf",
+    **kwargs,
 ) -> bytes | list[bytes]:
     """Generate schedule from the data, and returns the bytes."""
     import typst
 
     template_file = Path(__file__).parent / "template.typ"
     return typst.compile(
-        template_file, format=format, sys_inputs={"schedule": json.dumps(data)}
+        template_file, sys_inputs={"schedule": json.dumps(data)}, **kwargs
     )
 
 
 def main() -> None:
-    config = get_config()
-    data = generate_data(config)
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Generate a neat schedule from ICS calendar files."
+    )
+    parser.add_argument("output", help="File to output the schedule to.", type=Path)
+    parser.add_argument(
+        "--start-date",
+        help="Date for the first page of the schedule. (Use ISO date format).",
+        type=date.fromisoformat,
+    )
+    parser.add_argument(
+        "--config",
+        help="Custom configuration file location.",
+        type=Path,
+    )
+
+    args = parser.parse_args()
+
+    config = get_config(args.config)
+    data = generate_data(config, start_date=args.start_date)
+
+    generate_schedule(data, output=str(args.output))
 
 
 if __name__ == "__main__":
