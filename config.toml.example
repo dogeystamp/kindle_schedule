@@ -10,7 +10,8 @@
 # This directory contains a bunch of .ics files. kindle_schedule will search it
 # recursively (**/*.ics) and merge all the files to generate the schedule.
 #
-# You can use vdirsyncer(1) to sync this directory to a central server like xandikos(8) or radicale.
+# You can use vdirsyncer(1) to sync this directory to a central server like xandikos(8) or Google Calendar.
+# See: https://vdirsyncer.pimutils.org/en/stable/tutorial.html
 ics_directory = "~/.local/share/vdirsyncer/cal/"
 
 # Start and end range displayed for a day in the schedule.
