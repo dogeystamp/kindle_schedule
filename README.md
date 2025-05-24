@@ -80,7 +80,7 @@ MacOS. This script itself should work on Windows, but `vdirsyncer` doesn't.
 
     ```
     vdirsyncer sync \
-        && uv run kindle_schedule/kindle_schedule.py ~/.schedule.pdf \
+        && kindle_schedule/kindle_schedule.py ~/.schedule.pdf \
         && scp ~/.schedule.pdf [kindle's IP address]:/mnt/us/documents/schedule.pdf -p 2222
     ```
 
@@ -104,6 +104,8 @@ so you can install the dependencies and run the scripts with a single command:
 ```
 uv run kindle_schedule.py
 ```
+
+Or, since it has a shebang, just `./kindle_schedule.py`.
 
 To get a virtual environment for your IDE / LSP to work with, you can do the following:
 
