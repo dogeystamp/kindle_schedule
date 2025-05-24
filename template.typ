@@ -39,10 +39,10 @@
   // Event's title.
   event_name,
   // Optional settings.
-  settings: (:),
+  extra: (:),
 ) = {
-  let n_overlaps = settings.at("n_overlaps", default: 0)
-  let description = settings.at("description", default: [])
+  let n_overlaps = extra.at("n_overlaps", default: 0)
+  let description = extra.at("description", default: [])
 
   let cell_fill = if n_overlaps > 0 {
     luma(90%)
@@ -269,69 +269,6 @@
 #set text(font: "Liberation Sans", size: 6pt)
 
 
-#let bingus = (
-  (
-    event_cell(
-      datetime(year: 2025, month: 5, day: 22),
-      datetime(year: 2025, month: 5, day: 22, hour: 9, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 22, hour: 10, minute: 0, second: 0),
-      [*Probability & statistics*],
-    ),
-    event_cell(
-      datetime(year: 2025, month: 5, day: 22),
-      datetime(year: 2025, month: 5, day: 22, hour: 18, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 22, hour: 20, minute: 0, second: 0),
-      [*Probability & statistics*],
-    ),
-  ),
-  (
-    event_cell(
-      datetime(year: 2025, month: 5, day: 23),
-      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
-      [*Badingus*],
-    ),
-    event_cell(
-      datetime(year: 2025, month: 5, day: 23),
-      datetime(year: 2025, month: 5, day: 23, hour: 17, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 23, hour: 19, minute: 0, second: 0),
-      [*Probability & statistics*],
-    ),
-  ),
-  (
-    event_cell(
-      datetime(year: 2025, month: 5, day: 23),
-      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
-      [*Badingus*],
-    ),
-  ),
-  (
-    event_cell(
-      datetime(year: 2025, month: 5, day: 23),
-      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
-      [*Badingus*],
-    ),
-  ),
-  (
-    event_cell(
-      datetime(year: 2025, month: 5, day: 23),
-      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
-      [*Badingus*],
-    ),
-  ),
-  (
-    event_cell(
-      datetime(year: 2025, month: 5, day: 23),
-      datetime(year: 2025, month: 5, day: 23, hour: 12, minute: 0, second: 0),
-      datetime(year: 2025, month: 5, day: 23, hour: 16, minute: 0, second: 0),
-      [*54krjlk*],
-    ),
-  ),
-)
-
 /// Parse a date from JSON (Typst doesn't support this natively).
 #let parse_date(date) = {
   datetime(
@@ -352,9 +289,10 @@
   )
 }
 
+
+// parse events from JSON
 #let data = json("data.json")
 #let start_date = parse_date(data.start_date)
-
 #let events = (
   data
     .events
@@ -372,7 +310,7 @@
             start,
             end,
             [*#regular_ev.name*],
-            settings: (description: regular_ev.summary),
+            extra: regular_ev.at("extra", default: (:)),
           )
         }),
         all_day: ev.all_day.map(all_day_ev => {
@@ -380,12 +318,5 @@
         }),
       )
     })
-)
-
-#let bingus2 = (
-  (
-    all_day_cell[bingus],
-    all_day_cell[dingus],
-  ),
 )
 #calendar(start_date, events)
