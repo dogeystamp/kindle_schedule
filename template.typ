@@ -124,19 +124,22 @@
     // columns:
     // - hour indicators
     // - timetable
-    columns: (3em, auto),
+    columns: (auto, auto),
     // rows:
     // - days of the week
     // - all day events
     // - timetable
-    rows: (2.5em, auto, 1fr),
+    rows: (auto, auto, 1fr),
+
+    // note above that `auto` means "use just enough space", while `1fr` means
+    // "use all remaining space".
 
     // corner area (idk what to put here)
     block(),
 
     // day of the week indicators
     block(
-      height: 100%,
+      height: auto,
       width: 100%,
       grid(
         columns: SCHEDULE_DAYS,
@@ -144,9 +147,8 @@
           let current_date = start_date + duration(days: i)
           rect(
             width: 100%,
-            height: 100%,
             stroke: none,
-            inset: 0em,
+            inset: (left: 0em, right: 0em, top: 0.5em, bottom: 0.5em),
             align(
               center + top,
               [
@@ -189,16 +191,18 @@
     ),
 
     // hour indicators
-    block(height: 100%, width: 100%, inset: (right: 0.5em))[
+    block(height: 100%, width: auto, inset: (right: 1em))[
       #let current_time = START_TIME
       #while current_time < END_TIME {
-        let time_label = text(current_time.display("[hour]:[minute]"))
+        // zero height to avoid displacing the other labels
+        let time_label = box(height: 0em, text(current_time.display("[hour]")))
 
         place(
-          right,
-          dx: -0.15em,
+          top,
+          float: true,
+          clearance: 0em,
           dy: (current_time - START_TIME).hours() * hour_height - 0.375em,
-          time_label,
+          time_label
         )
         current_time += duration(hours: 1)
       }
