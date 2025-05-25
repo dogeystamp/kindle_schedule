@@ -88,7 +88,9 @@ MacOS. This script itself should work on Windows, but `vdirsyncer` doesn't.
 
 - In KOReader, open the file browser (the file cabinet icon) in the top menu and open `schedule.pdf`.
 
-- In the bottom menu, set "View Mode" to "page". You might also want to edit the "Zoom to" and "Fit" settings.
+- In the bottom menu, set "View Mode" to "page".
+    - You might also want to edit the "Zoom to" and "Fit" settings.
+    - Set "Page Crop" to "none" and set "Margin" to the minimum.
 
 - In the top menu, go to `Settings → Screen → Sleep screen`. Disable the sleep screen message, and select `Wallpaper → Leave screen as-is`.
 

@@ -243,9 +243,9 @@
     ),
 
     // hour indicators
-    block(height: 100%, width: auto, inset: (right: 1em))[
+    block(height: 100%, width: auto, inset: (right: 0.75em))[
       #let current_time = start_time
-      #while current_time < end_time {
+      #while current_time <= end_time {
         // zero height to avoid displacing the other labels
         let time_label = box(height: 0em, text(current_time.display("[hour]")))
 
@@ -267,25 +267,36 @@
       {
         // hour line markers
         let current_time = start_time
-        while current_time < end_time {
+        let i = 0
+        while current_time <= end_time {
           let time_label = text(current_time.display("[hour]:[minute]"))
 
+          let stroke_ = if calc.rem(i, 2) == 0 { 0.5pt + luma(70%) } else { 0.5pt + luma(90%) }
+
           place(
-            dx: -1%,
+            dx: 0%,
             dy: (current_time - start_time).hours() * hour_height,
-            line(length: 102%, stroke: 0.5pt + gray),
+            line(length: 100%, stroke: stroke_),
           )
           current_time += duration(hours: 1)
+          i += 1
         }
-
 
         // events
         grid(
           columns: range(schedule_days).map(_ => 1fr),
           rows: 1fr,
           ..range(schedule_days).map(i => {
+            let current_date = start_date + duration(days: 1) * i
+            let is_weekend = current_date.weekday() == 6 or current_date.weekday() == 7
+
             let today_events = events.at(i, default: (:)).at("regular", default: ())
-            block(width: 100%, height: 100%, for event in today_events { event })
+            block(
+              width: 100%,
+              height: 100%,
+              fill: if is_weekend { luma(0%).transparentize(92%) } else { none },
+              for event in today_events { event },
+            )
           })
         )
       },
@@ -313,7 +324,7 @@
   width: data.screen.width * 1in,
   height: data.screen.height * 1in,
   flipped: data.screen.flipped,
-  margin: (top: 1em, bottom: 1em, left: 1.0em, right: 1.5em),
+  margin: (top: 0.2em, bottom: 1em, left: 0.75em, right: 1.0em),
 )
 #set text(font: data.screen.font_family, size: data.screen.font_size * 1pt)
 
