@@ -13,17 +13,20 @@
 import dataclasses
 import functools
 import json
+import logging
 import os
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
-from typing import Self, cast
+from typing import Literal, Self, cast
 
 import icalendar
 import recurring_ical_events
 import tomllib
 from icalendar import Calendar
 from mergecal import merge_calendars
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,6 +39,8 @@ class Configuration:
     schedule_days: int
     max_days: int
     screen: dict
+    format: Literal["vdir"] | Literal["none"]
+    unimportant_calendars: set[str]
 
 
 def get_config(location: Path | None = None) -> Configuration:
@@ -79,15 +84,54 @@ def get_config(location: Path | None = None) -> Configuration:
         schedule_days=config.get("schedule_days", 5),
         max_days=config.get("max_days", 33),
         screen=screen,
+        format=config.get("format", "none"),
+        unimportant_calendars=set(config.get("unimportant_calendars", []))
     )
 
 
-def read_calendars(ics_directory: Path) -> Calendar:
-    """Read all .ics files in the directory and merge them into a single Calendar."""
+def read_calendars_basic(ics_directory: Path) -> Calendar:
+    """
+    Read all .ics files in the directory and merge them into a single Calendar.
+
+    Uses a recursive glob (`**/*.ics`).
+    """
 
     return merge_calendars(
         [Calendar.from_ical(f.read_text()) for f in ics_directory.glob("**/*.ics")]  # type: ignore
     )
+
+
+def read_calendars_vdir(vdir: Path) -> Calendar:
+    """Read .ics files from a vdir and also parse the metadata."""
+    calendars: list[Calendar] = []
+
+    for cal_dir in vdir.iterdir():
+        if not cal_dir.is_dir():
+            logging.warning("Ignoring file in vdir: '%s'", str(cal_dir))
+            continue
+
+        displayname: str | None = None
+        displayname_file = cal_dir / "displayname"
+        if displayname_file.is_file():
+            displayname = displayname_file.read_text()
+
+        for file in cal_dir.glob("*.ics"):
+            calendar: Calendar = Calendar.from_ical(file.read_text())  # type: ignore
+            if displayname:
+                for event in calendar.events:
+                    event["X-VDIR-DISPLAYNAME"] = displayname
+            calendars.append(calendar)
+
+    return merge_calendars(calendars)
+
+
+def read_calendars(config: Configuration) -> Calendar:
+    """Return a merged calendar based on the ICS data on disk."""
+    match config.format:
+        case "vdir":
+            return read_calendars_vdir(config.ics_directory)
+        case _:
+            return read_calendars_basic(config.ics_directory)
 
 
 @functools.total_ordering
@@ -242,6 +286,7 @@ def serialize_evs(regular_evs: list[Event], all_day_evs: list[Event]) -> dict:
             extra=dict(
                 n_overlaps=ev.n_overlaps,
                 description=ev.inner.get("DESCRIPTION", ev.inner.get("LOCATION")),
+                calendar_name=ev.inner.get("X-VDIR-DISPLAYNAME"),
             ),
         )
 
@@ -264,7 +309,7 @@ def generate_data(
 
     start_date = start_date or date.today()
 
-    calendar = read_calendars(config.ics_directory)
+    calendar = read_calendars(config)
 
     events = []
     for i in range(config.max_days):
@@ -279,6 +324,7 @@ def generate_data(
         schedule_days=config.schedule_days,
         screen=config.screen,
         events=events,
+        unimportant_calendars=list(config.unimportant_calendars),
     )
 
 

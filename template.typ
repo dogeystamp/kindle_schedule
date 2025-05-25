@@ -52,17 +52,19 @@
 ) = {
   rect(
     width: 100%,
-    fill: luma(90%),
+    stroke: 0.75pt,
     inset: 0.5em,
     align(
       horizon + center,
       [
         #set text(size: 0.9em)
-        #summary
+        *#summary*
       ],
     ),
   )
 }
+
+#let unimportant_calendars = data.at("unimportant_calendars", default: ())
 
 /// Compute the positioning and scaling of the cell for a single event.
 #let event_cell(
@@ -78,10 +80,14 @@
   let n_overlaps = extra.at("n_overlaps", default: 0)
   let description = extra.at("description", default: [])
 
-  let cell_fill = if n_overlaps > 0 {
-    luma(90%)
-  } else {
+  let calendar_name = extra.at("calendar_name", default: none)
+
+  let is_emphasized = n_overlaps > 0 or not unimportant_calendars.contains(calendar_name)
+
+  let cell_fill = if is_emphasized {
     luma(100%)
+  } else {
+    luma(92%)
   }
 
   let today_start = datetime(
@@ -139,9 +145,9 @@
     if count > 0 {
       parbreak()
       if count > 1 [
-        _(#count other events)_
+        *(#count other events)*
       ] else [
-        _(#count other event)_
+        *(#count other event)*
       ]
     }
   }
@@ -154,10 +160,14 @@
       height: calc.max(0, (effective_end - effective_start).hours()) * hour_height,
       fill: cell_fill,
       stroke: 1pt + black,
-      inset: 0.5em,
+      inset: 0.45em,
       width: 100%,
     )[
-      #event_name
+      #if is_emphasized {
+      strong(event_name)
+    } else {
+      event_name
+    }
       #set text(size: 0.8em)
       #time_msg(ev_start_time, ev_end_time, current_date)
 
@@ -344,7 +354,7 @@
             current_date,
             start,
             end,
-            [*#regular_ev.name*],
+            [#regular_ev.name],
             extra: regular_ev.at("extra", default: (:)),
           )
         }),
