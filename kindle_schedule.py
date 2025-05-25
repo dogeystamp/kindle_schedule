@@ -241,7 +241,7 @@ def serialize_evs(regular_evs: list[Event], all_day_evs: list[Event]) -> dict:
             end=serialize_datetime(ev.inner.DTEND),
             extra=dict(
                 n_overlaps=ev.n_overlaps,
-                description=ev.inner.get("DESCRIPTION"),
+                description=ev.inner.get("DESCRIPTION", ev.inner.get("LOCATION")),
             ),
         )
 
