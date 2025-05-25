@@ -52,7 +52,7 @@
 ) = {
   rect(
     width: 100%,
-    stroke: 0.75pt,
+    stroke: 0.5pt,
     inset: 0.5em,
     align(
       horizon + center,
@@ -64,7 +64,16 @@
   )
 }
 
-#let unimportant_calendars = data.at("unimportant_calendars", default: ())
+#let calendar_styles = data.at("calendar_styles", default: (:))
+#(calendar_styles.default = calendar_styles.at("default", default: "normal"))
+
+#let event_style_opts = (
+  "normal": (fill: white),
+  "striped": (fill: gradient.linear(luma(100%), luma(90%), angle: 20deg).sharp(2).repeat(10)),
+  "striped2": (fill: gradient.conic(luma(100%), luma(90%), center: (0%, 10%)).sharp(3).repeat(15)),
+  "plain": (fill: luma(92%)),
+  "black": (fill: black),
+)
 
 /// Compute the positioning and scaling of the cell for a single event.
 #let event_cell(
@@ -82,13 +91,12 @@
 
   let calendar_name = extra.at("calendar_name", default: none)
 
-  let is_emphasized = n_overlaps > 0 or not unimportant_calendars.contains(calendar_name)
+  let style = calendar_styles.at(
+    calendar_name,
+    default: calendar_styles.at("default"),
+  )
 
-  let cell_fill = if is_emphasized {
-    luma(100%)
-  } else {
-    luma(92%)
-  }
+  let opts = event_style_opts.at(style)
 
   let today_start = datetime(
     year: current_date.year(),
@@ -158,24 +166,33 @@
     dy: (effective_start - today_start).hours() * hour_height,
     rect(
       height: calc.max(0, (effective_end - effective_start).hours()) * hour_height,
-      fill: cell_fill,
-      stroke: 1pt + black,
+      ..opts,
+      stroke: 0.7pt + black,
       inset: 0.45em,
       width: 100%,
-    )[
-      #if is_emphasized {
-      strong(event_name)
-    } else {
-      event_name
-    }
-      #set text(size: 0.8em)
-      #time_msg(ev_start_time, ev_end_time, current_date)
+      {
+        let text_fill = if style == "black" { white } else { black }
 
-      #if ev_format != "x-small" {
-        emph(description)
-        others_msg(n_overlaps)
-      }
-    ],
+        set text(fill: text_fill)
+
+        if style != "plain" {
+          strong(event_name)
+        } else {
+          event_name
+        }
+        parbreak()
+
+        set text(size: 0.8em)
+        time_msg(ev_start_time, ev_end_time, current_date)
+
+        parbreak()
+
+        if ev_format != "x-small" {
+          emph(description)
+          others_msg(n_overlaps)
+        }
+      },
+    ),
   )
 }
 
@@ -304,7 +321,7 @@
             block(
               width: 100%,
               height: 100%,
-              fill: if is_weekend { luma(0%).transparentize(92%) } else { none },
+              fill: if is_weekend { luma(0%).transparentize(88%) } else { none },
               for event in today_events { event },
             )
           })

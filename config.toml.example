@@ -27,8 +27,16 @@ schedule_days = 5
 # Total number of days to read events from.
 max_days = 33
 
-# Gray out events from calendars in this array.
-unimportant_calendars = ["Schedule"]
+# Set the style of events based on which calendar they're in.
+#
+# Use the 'default' key for calendars that don't match.
+#
+# plain: gray, not bold title
+# normal: white, black border
+# striped: white, black border, stripe pattern
+# striped2: same thing, but a more interesting pattern
+# black: black background
+calendar_styles = { default = "normal", Schedule = "plain", Evaluations = "striped", Exams = "black" }
 
 
 

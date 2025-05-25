@@ -40,7 +40,7 @@ class Configuration:
     max_days: int
     screen: dict
     format: Literal["vdir"] | Literal["none"]
-    unimportant_calendars: set[str]
+    calendar_styles: dict[str, str]
 
 
 def get_config(location: Path | None = None) -> Configuration:
@@ -85,7 +85,7 @@ def get_config(location: Path | None = None) -> Configuration:
         max_days=config.get("max_days", 33),
         screen=screen,
         format=config.get("format", "none"),
-        unimportant_calendars=set(config.get("unimportant_calendars", []))
+        calendar_styles=config.get("calendar_styles", {}),
     )
 
 
@@ -324,7 +324,7 @@ def generate_data(
         schedule_days=config.schedule_days,
         screen=config.screen,
         events=events,
-        unimportant_calendars=list(config.unimportant_calendars),
+        calendar_styles=config.calendar_styles,
     )
 
 
