@@ -7,6 +7,8 @@ last at least a month.
 The display can be synchronized with your cloud calendar semi-automatically, as
 long as you can get the events in ICS format.
 
+![preview](https://raw.githubusercontent.com/dogeystamp/kindle_schedule/main/picture.jpg)
+
 Some features:
 
 - Custom event styles based on the calendar they come from
