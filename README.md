@@ -7,6 +7,13 @@ last at least a month.
 The display can be synchronized with your cloud calendar semi-automatically, as
 long as you can get the events in ICS format.
 
+Some features:
+
+- Custom event styles based on the calendar they come from
+- Support for all-day events
+- Interactive scrolling through days
+- Support for Description and Location fields
+
 ## how it works
 
 The schedule display itself is just a re-purposed e-reader.
@@ -118,3 +125,16 @@ uv sync --active --script kindle_schedule.py
 ```
 
 This will create a virtual environment with all of the script's dependencies.
+
+If you want to modify code and interactively see the results, you can use the [Marimo](https://github.com/marimo-team/marimo)
+notebook in `notebook.py`.
+(This notebook is provided as-is, with no guarantee that it works.)
+You can run it using:
+
+```
+uv tool install marimo
+marimo --watch --sandbox notebook.py
+```
+
+In Marimo, you can edit the Python source code files and the notebook will
+automatically re-run the entire pipeline for generating the schedule.
