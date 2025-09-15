@@ -80,6 +80,8 @@
   "normal": (fill: white),
   "striped": (fill: gradient.linear(luma(100%), luma(90%), angle: 20deg).sharp(2).repeat(10)),
   "striped2": (fill: gradient.conic(luma(100%), luma(90%), center: (0%, 10%)).sharp(3).repeat(15)),
+  "striped3": (fill: gradient.linear(luma(95%), luma(70%), angle: 90deg).sharp(5)),
+  "gradient": (fill: gradient.linear(luma(99%), luma(80%), angle: 0deg)),
   "plain": (fill: luma(92%)),
   "black": (fill: black),
 )

@@ -25,7 +25,7 @@ end_time =   22:00:00
 schedule_days = 5
 
 # Total number of days to read events from.
-max_days = 33
+max_days = 40
 
 # Set the style of events based on which calendar they're in.
 #
@@ -34,9 +34,11 @@ max_days = 33
 # plain: gray, not bold title
 # normal: white, black border
 # striped: white, black border, stripe pattern
-# striped2: same thing, but a more interesting pattern
+# striped2: same thing, but a more interesting pattern (and also conic)
+# striped3: simple horizontal stripes
+# gradient: a simple horizontal gradient fade
 # black: black background
-calendar_styles = { default = "normal", Schedule = "plain", Evaluations = "striped", Exams = "black" }
+calendar_styles = { default = "normal", Schedule = "plain", Event = "striped3", Evaluations = "striped", Exams = "black" }
 
 
 
@@ -54,5 +56,5 @@ font_size = 6
 
 # Font family used by Typst.
 #
-# Liberation Sans is usally not installed but it will fall back to a default font.
-font_family = "Liberation Sans"
+# Nimbus Sans is usally not installed but it will fall back to a default font.
+font_family = "Nimbus Sans"
