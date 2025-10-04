@@ -286,13 +286,16 @@ def serialize_evs(regular_evs: list[Event], all_day_evs: list[Event]) -> dict:
             ev.inner.DTEND, datetime
         )
 
+        ev_description = ev.inner.get("DESCRIPTION", "").strip()
+        ev_location = ev.inner.get("LOCATION", "")
+
         return dict(
             name=ev.inner.get("SUMMARY", ""),
             start=serialize_datetime(ev.inner.DTSTART),
             end=serialize_datetime(ev.inner.DTEND),
             extra=dict(
                 n_overlaps=ev.n_overlaps,
-                description=ev.inner.get("DESCRIPTION", ev.inner.get("LOCATION")),
+                description=ev_description if ev_description else ev_location,
                 calendar_name=ev.inner.get("X-VDIR-DISPLAYNAME"),
             ),
         )
