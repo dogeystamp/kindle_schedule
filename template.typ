@@ -127,12 +127,20 @@
     second: end_time.second(),
   )
 
-  let effective_start = calc.max(ev_start_time, today_start)
-  let effective_end = calc.min(ev_end_time, today_end)
+  let clamp_date(value, min, max) = {
+    calc.min(calc.max(value, min), max)
+  }
+
+  let effective_start = clamp_date(ev_start_time, today_start, today_end)
+  let effective_end = clamp_date(ev_end_time, today_start, today_end)
 
   let effective_duration = effective_end - effective_start
 
-  let ev_format = if effective_duration.hours() <= 0.5 {
+  let ev_format = if effective_duration.hours() == 0 {
+    "ellipses"
+  } else if effective_duration.hours() <= 0.30 {
+    "xx-small"
+  } else if effective_duration.hours() <= 0.5 {
     "x-small"
   } else if effective_duration.hours() <= 1.0 {
     "small"
@@ -140,10 +148,19 @@
     "normal"
   }
 
-  let text_size = ("x-small": 0.7em, "small": 0.825em, "normal": 1em)
+  if ev_format == "ellipses" {
+    return place(
+      top + center,
+      dx: 0%,
+      dy: (effective_start - today_start).hours() * hour_height,
+      line(stroke: (cap: "square", dash: "densely-dashed"), length: 100%)
+    )
+  }
+
+  let text_size = ("xx-small": 0.6em, "x-small": 0.7em, "small": 0.825em, "normal": 1em)
   set text(size: text_size.at(ev_format))
 
-  let time_msg = (start, end, today_date) => {
+  let time_msg = (start, end, today_date, do_parbreak: true) => {
     let start_label = if datetime_to_date(start) == today_date {
       [#start.display("[hour]:[minute]")]
     } else {
@@ -156,13 +173,16 @@
       []
     }
 
-    parbreak()
+    if do_parbreak {
+      parbreak()
+    } else {
+      h(1fr)
+    }
     [#start_label -- #end_label]
   }
 
   let others_msg = count => {
     if count > 0 {
-      parbreak()
       if count > 1 [
         *(#count other events)*
       ] else [
@@ -191,10 +211,9 @@
         } else {
           event_name
         }
-        parbreak()
 
         set text(size: 0.8em)
-        time_msg(ev_start_time, ev_end_time, current_date)
+        time_msg(ev_start_time, ev_end_time, current_date, do_parbreak: (ev_format != "xx-small"))
 
         parbreak()
 
