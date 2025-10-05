@@ -138,7 +138,7 @@
 
   let ev_format = if effective_duration.hours() == 0 {
     "ellipses"
-  } else if effective_duration.hours() <= 0.30 {
+  } else if effective_duration.hours() <= 0.4 {
     "xx-small"
   } else if effective_duration.hours() <= 0.5 {
     "x-small"
